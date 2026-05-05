@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vpn_bot_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT}:8000"
+    depends_on:
+      - postgres
+    networks:
+      - vpn_bot_network
+
+  postgres:
+    image: postgres:16
+    container_name: vpn_bot_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vpn_bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  vpn_bot_network:
+    driver: bridge
