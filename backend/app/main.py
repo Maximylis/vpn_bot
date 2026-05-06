@@ -81,7 +81,11 @@ async def get_active_subscription(
     return crud.get_active_subscription(db, user_id)
 
 
-@app.get("/users/{telegram_id}/access", response_model=schemas.UserAccessRead)
+@app.get(
+    "/users/{telegram_id}/access",
+    response_model=schemas.UserAccessRead,
+    dependencies=[Depends(verify_api_token)],
+)
 async def get_user_access(
     telegram_id: int,
     db: Session = Depends(get_db),
