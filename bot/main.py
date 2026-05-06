@@ -1,20 +1,30 @@
 import os
+from datetime import datetime
 
 import requests
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 from dotenv import load_dotenv
-from datetime import datetime
 
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_TOKEN = os.getenv("API_TOKEN")
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set")
+
+if not API_TOKEN:
+    raise RuntimeError("API_TOKEN is not set")
+
+
+def api_headers() -> dict:
+    return {
+        "X-API-Token": API_TOKEN,
+    }
 
 
 bot = Bot(token=BOT_TOKEN)
@@ -25,6 +35,7 @@ def backend_post(path: str, json: dict | None = None):
     response = requests.post(
         f"{API_URL}{path}",
         json=json,
+        headers=api_headers(),
         timeout=10,
     )
     response.raise_for_status()
@@ -34,6 +45,7 @@ def backend_post(path: str, json: dict | None = None):
 def backend_get(path: str):
     response = requests.get(
         f"{API_URL}{path}",
+        headers=api_headers(),
         timeout=10,
     )
     response.raise_for_status()
@@ -88,7 +100,6 @@ async def profile_handler(message: Message):
         return
 
     subscription = access["subscription"]
-
     expires_at = format_datetime(subscription["expires_at"])
 
     await message.answer(
