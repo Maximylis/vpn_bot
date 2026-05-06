@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_env: str = "development"
+
     bot_token: str | None = None
 
     api_url: str = "http://localhost:8000"

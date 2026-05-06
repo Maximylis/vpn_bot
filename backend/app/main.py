@@ -3,6 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
+from app.config import settings
 from app.database import Base, engine, get_db
 from app.security import verify_api_token
 
@@ -132,13 +133,14 @@ async def get_user_access(
     }
 
 
-@app.post(
-    "/dev/grant-access/{telegram_id}",
-    response_model=schemas.GrantAccessRead,
-    dependencies=[Depends(verify_api_token)],
-)
-async def grant_access(
-    telegram_id: int,
-    db: Session = Depends(get_db),
-):
-    return crud.grant_test_access(db, telegram_id)
+if settings.app_env == "development":
+    @app.post(
+        "/dev/grant-access/{telegram_id}",
+        response_model=schemas.GrantAccessRead,
+        dependencies=[Depends(verify_api_token)],
+    )
+    async def grant_access(
+        telegram_id: int,
+        db: Session = Depends(get_db),
+    ):
+        return crud.grant_test_access(db, telegram_id)
