@@ -1,18 +1,16 @@
 services:
   backend:
     image: ${DOCKERHUB_USERNAME}/vpn-backend:latest
-    container_name: vpn_bot_backend
     restart: unless-stopped
     env_file:
       - .env
-    depends_on:
-      - postgres
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
 
   bot:
     image: ${DOCKERHUB_USERNAME}/vpn-bot:latest
-    container_name: vpn_bot_app
     restart: unless-stopped
     env_file:
       - .env
@@ -21,7 +19,6 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: vpn_bot_postgres
     restart: unless-stopped
     env_file:
       - .env
