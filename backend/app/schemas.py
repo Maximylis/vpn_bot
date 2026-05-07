@@ -59,12 +59,14 @@ class SubscriptionRead(BaseModel):
     expires_at: datetime
     created_at: datetime
 
+
 class UserAccessRead(BaseModel):
     has_access: bool
     reason: str | None = None
     user: UserRead | None = None
     subscription: SubscriptionRead | None = None
     vpn_keys: list[VpnKeyRead] = []
+
 
 class GrantAccessRead(BaseModel):
     ok: bool

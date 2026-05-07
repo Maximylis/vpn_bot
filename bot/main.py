@@ -101,10 +101,11 @@ async def profile_handler(message: Message):
 
     subscription = access["subscription"]
     expires_at = format_datetime(subscription["expires_at"])
+    access_status = "активен ✅" if access["has_access"] else "неактивен ❌"
 
     await message.answer(
         "👤 Профиль\n\n"
-        f"Статус доступа: {'активен ✅' if access['has_access'] else 'неактивен ❌'}\n"
+        f"Статус доступа: {access_status}\n"
         f"Подписка до: {expires_at}"
     )
 

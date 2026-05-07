@@ -47,7 +47,11 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -107,7 +111,9 @@ class VpnKey(Base):
         nullable=False,
     )
 
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
     user: Mapped["User"] = relationship(back_populates="vpn_keys")
 
@@ -145,4 +151,3 @@ class Subscription(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="subscriptions")
-    

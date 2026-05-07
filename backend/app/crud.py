@@ -5,7 +5,9 @@ from datetime import datetime, timedelta, timezone
 from app import models, schemas
 
 
-def get_user_by_telegram_id(db: Session, telegram_id: int) -> models.User | None:
+def get_user_by_telegram_id(
+        db: Session, telegram_id: int
+) -> models.User | None:
     return (
         db.query(models.User)
         .filter(models.User.telegram_id == telegram_id)
@@ -23,7 +25,9 @@ def create_user(db: Session, user_data: schemas.UserCreate) -> models.User:
     return user
 
 
-def get_or_create_user(db: Session, user_data: schemas.UserCreate) -> models.User:
+def get_or_create_user(
+        db: Session, user_data: schemas.UserCreate
+) -> models.User:
     user = get_user_by_telegram_id(db, user_data.telegram_id)
 
     if user:
@@ -32,7 +36,9 @@ def get_or_create_user(db: Session, user_data: schemas.UserCreate) -> models.Use
     return create_user(db, user_data)
 
 
-def create_vpn_key(db: Session, key_data: schemas.VpnKeyCreate) -> models.VpnKey:
+def create_vpn_key(
+        db: Session, key_data: schemas.VpnKeyCreate
+) -> models.VpnKey:
     vpn_key = models.VpnKey(**key_data.model_dump())
 
     db.add(vpn_key)
@@ -78,6 +84,7 @@ def get_active_subscription(
         .first()
     )
 
+
 def get_active_vpn_keys(db: Session, user_id: int) -> list[models.VpnKey]:
     return (
         db.query(models.VpnKey)
@@ -107,6 +114,7 @@ def get_valid_active_subscription(
         .order_by(models.Subscription.expires_at.desc())
         .first()
     )
+
 
 def grant_test_access(
     db: Session,

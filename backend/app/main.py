@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import crud, schemas
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.security import verify_api_token
@@ -74,7 +74,10 @@ async def create_subscription(
     return crud.create_subscription(db, subscription_data)
 
 
-@app.get("/users/{user_id}/subscription", response_model=schemas.SubscriptionRead | None)
+@app.get(
+        "/users/{user_id}/subscription",
+        response_model=schemas.SubscriptionRead | None
+)
 async def get_active_subscription(
     user_id: int,
     db: Session = Depends(get_db),
