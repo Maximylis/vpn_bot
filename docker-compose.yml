@@ -11,6 +11,7 @@ services:
       - "${BACKEND_PORT}:8000"
     depends_on:
       - postgres
+      - vpn-manager
     networks:
       - vpn_bot_network
 
@@ -35,6 +36,19 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vpn_bot_network
+
+  vpn-manager:
+    build:
+      context: ./vpn-manager
+      dockerfile: Dockerfile
+    container_name: vpn_manager
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
     networks:
       - vpn_bot_network
 

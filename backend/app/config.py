@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     api_url: str = "http://localhost:8000"
     api_token: str
 
+    vpn_manager_url: str = "http://vpn-manager:9000"
+    vpn_manager_api_token: str
+
     postgres_db: str
     postgres_user: str
     postgres_password: str
