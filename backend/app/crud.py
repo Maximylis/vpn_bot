@@ -1,12 +1,14 @@
-from sqlalchemy.orm import Session
-
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy.orm import Session
+
 from app import models, schemas
+from app.vpn_manager_client import create_peer
 
 
 def get_user_by_telegram_id(
-        db: Session, telegram_id: int
+    db: Session,
+    telegram_id: int,
 ) -> models.User | None:
     return (
         db.query(models.User)
@@ -26,7 +28,8 @@ def create_user(db: Session, user_data: schemas.UserCreate) -> models.User:
 
 
 def get_or_create_user(
-        db: Session, user_data: schemas.UserCreate
+    db: Session,
+    user_data: schemas.UserCreate,
 ) -> models.User:
     user = get_user_by_telegram_id(db, user_data.telegram_id)
 
@@ -37,7 +40,8 @@ def get_or_create_user(
 
 
 def create_vpn_key(
-        db: Session, key_data: schemas.VpnKeyCreate
+    db: Session,
+    key_data: schemas.VpnKeyCreate,
 ) -> models.VpnKey:
     vpn_key = models.VpnKey(**key_data.model_dump())
 
@@ -116,7 +120,7 @@ def get_valid_active_subscription(
     )
 
 
-def grant_test_access(
+async def grant_test_access(
     db: Session,
     telegram_id: int,
     days: int = 30,
@@ -158,22 +162,22 @@ def grant_test_access(
         db.query(models.VpnKey)
         .filter(
             models.VpnKey.user_id == user.id,
-            models.VpnKey.provider == "dev",
+            models.VpnKey.provider == "wireguard",
             models.VpnKey.status == "active",
         )
         .order_by(models.VpnKey.created_at.desc())
         .first()
     )
 
-    if vpn_key:
-        vpn_key.key_name = f"{telegram_id}.conf"
-        vpn_key.config_text = f"{telegram_id}.conf"
-    else:
+    if vpn_key is None:
+        peer = await create_peer(telegram_id=telegram_id)
+
         vpn_key = models.VpnKey(
             user_id=user.id,
-            provider="dev",
+            provider="wireguard",
             key_name=f"{telegram_id}.conf",
-            config_text=f"{telegram_id}.conf",
+            peer_id=peer["peer_id"],
+            config_text=peer["config"],
             status="active",
         )
         db.add(vpn_key)

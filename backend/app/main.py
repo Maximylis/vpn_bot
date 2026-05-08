@@ -75,8 +75,8 @@ async def create_subscription(
 
 
 @app.get(
-        "/users/{user_id}/subscription",
-        response_model=schemas.SubscriptionRead | None
+    "/users/{user_id}/subscription",
+    response_model=schemas.SubscriptionRead | None,
 )
 async def get_active_subscription(
     user_id: int,
@@ -146,4 +146,4 @@ if settings.app_env == "development":
         telegram_id: int,
         db: Session = Depends(get_db),
     ):
-        return crud.grant_test_access(db, telegram_id)
+        return await crud.grant_test_access(db, telegram_id)

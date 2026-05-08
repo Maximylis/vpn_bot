@@ -96,6 +96,13 @@ class VpnKey(Base):
 
     key_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    peer_id: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
     config_text: Mapped[str] = mapped_column(Text, nullable=False)
 
     status: Mapped[str] = mapped_column(
@@ -112,7 +119,8 @@ class VpnKey(Base):
     )
 
     revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
+        DateTime,
+        nullable=True,
     )
 
     user: Mapped["User"] = relationship(back_populates="vpn_keys")
