@@ -7,6 +7,12 @@ from app.schemas import (
     CreatePeerResponse,
     DeletePeerResponse,
 )
+from app.config import settings
+from app.wireguard import (
+    allocate_client_ip,
+    generate_private_key,
+    generate_public_key,
+)
 from app.security import verify_api_token
 
 app = FastAPI(title="VPN Manager")
@@ -32,16 +38,22 @@ async def create_peer(
 ) -> CreatePeerResponse:
     peer_id = str(uuid.uuid4())
 
+    private_key = generate_private_key()
+    public_key = generate_public_key(private_key)
+
+    client_ip = allocate_client_ip(2)
+
     config = f"""
 [Interface]
-PrivateKey = mock-private-key
-Address = 10.0.0.2/32
-DNS = 1.1.1.1
+PrivateKey = {private_key}
+Address = {client_ip}
+DNS = {settings.wg_client_dns}
 
 [Peer]
-PublicKey = mock-server-public-key
-Endpoint = 127.0.0.1:51820
-AllowedIPs = 0.0.0.0/0
+PublicKey = {settings.wg_server_public_key}
+Endpoint = {settings.wg_endpoint}
+AllowedIPs = {settings.wg_client_allowed_ips}
+PersistentKeepalive = 25
 """
 
     return CreatePeerResponse(
