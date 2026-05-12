@@ -1,25 +1,9 @@
+version: "3.9"
+
 services:
-  backend:
-    image: ${DOCKERHUB_USERNAME}/vpn-backend:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-      - vpn-manager
-
-  bot:
-    image: ${DOCKERHUB_USERNAME}/vpn-bot:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    depends_on:
-      - backend
-
   postgres:
     image: postgres:16
+    container_name: vpn-postgres
     restart: unless-stopped
     env_file:
       - .env
@@ -27,16 +11,49 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   vpn-manager:
-    image: ${DOCKERHUB_USERNAME}/vpn-manager:latest
+    image: maximylis/vpn-manager:latest
+    container_name: vpn-manager
     restart: unless-stopped
     env_file:
       - .env
+
     cap_add:
       - NET_ADMIN
+
     sysctls:
       - net.ipv4.ip_forward=1
+
     volumes:
       - vpn_manager_state:/var/lib/vpn-manager
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: maximylis/vpn-backend:latest
+    container_name: vpn-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+
+    depends_on:
+      postgres:
+        condition: service_started
+      vpn-manager:
+        condition: service_healthy
+
+  bot:
+    image: maximylis/vpn-bot:latest
+    container_name: vpn-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

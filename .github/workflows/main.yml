@@ -34,6 +34,9 @@ jobs:
       - name: Run bot flake8
         run: flake8 bot
 
+      - name: Run vpn-manager flake8
+        run: flake8 vpn-manager
+
   build_and_push:
     name: Build and push Docker images
     runs-on: ubuntu-latest
@@ -67,6 +70,16 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/vpn-bot:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/vpn-bot:${{ github.sha }}
+
+      - name: Build and push vpn-manager image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./vpn-manager
+          file: ./vpn-manager/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/vpn-manager:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vpn-manager:${{ github.sha }}
 
   deploy:
     name: Deploy to server
