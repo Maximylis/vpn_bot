@@ -1,10 +1,15 @@
 import os
+import io
+import qrcode
 from datetime import datetime
 
 import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile
+from aiogram.types import (
+    Message, ReplyKeyboardMarkup,
+    KeyboardButton, BufferedInputFile
+)
 from dotenv import load_dotenv
 
 
@@ -75,11 +80,15 @@ async def send_vpn_config_file(message: Message, config_text: str):
 
     await message.answer_document(
         document=file,
-        caption="📄 Ваш WireGuard конфиг.\n\nИмпортируйте файл в приложение WireGuard."
+        caption=(
+            "📄 Ваш WireGuard конфиг.\n\n"
+            "Импортируйте файл в приложение WireGuard.")
     )
 
 
-async def send_vpn_config_qr(message: Message, config_text: str):
+async def send_vpn_config_qr(
+        message: Message, config_text: str
+):
     img = qrcode.make(config_text)
 
     buffer = io.BytesIO()
