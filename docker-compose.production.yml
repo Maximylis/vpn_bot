@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+      - vpn-manager
 
   bot:
     image: ${DOCKERHUB_USERNAME}/vpn-bot:latest
@@ -25,5 +26,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  vpn-manager:
+    image: ${DOCKERHUB_USERNAME}/vpn-manager:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    volumes:
+      - vpn_manager_state:/var/lib/vpn-manager
+
 volumes:
   postgres_data:
+  vpn_manager_state:

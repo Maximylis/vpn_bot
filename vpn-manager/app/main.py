@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 
 from app.schemas import (
     CreatePeerRequest,
@@ -12,6 +12,9 @@ from app.wireguard import (
     allocate_client_ip,
     generate_private_key,
     generate_public_key,
+    WireGuardError,
+    add_peer,
+    remove_peer,
 )
 from app.security import verify_api_token
 
@@ -41,7 +44,8 @@ async def create_peer(
     private_key = generate_private_key()
     public_key = generate_public_key(private_key)
 
-    client_ip = allocate_client_ip(2)
+    client_ip = allocate_client_ip()
+    add_peer(peer_id=peer_id, public_key=public_key, client_ip=client_ip)
 
     config = f"""
 [Interface]
@@ -68,4 +72,18 @@ PersistentKeepalive = 25
     dependencies=[Depends(verify_api_token)],
 )
 async def delete_peer(peer_id: str) -> DeletePeerResponse:
+    try:
+        deleted = remove_peer(peer_id)
+    except WireGuardError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Peer not found",
+        )
+
     return DeletePeerResponse(success=True)

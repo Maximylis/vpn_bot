@@ -82,8 +82,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd /opt/vpn-bot
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.production.yml pull
+            docker compose -f docker-compose.production.yml up -d
             docker image prune -f
 
       - name: Notify Telegram success
