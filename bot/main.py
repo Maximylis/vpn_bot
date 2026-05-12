@@ -137,9 +137,9 @@ async def myvpn_handler(message: Message):
     vpn_key = access["vpn_keys"][0]
 
     await message.answer(
-    "🔐 Твой VPN-конфиг:\n\n"
-    f"<pre>{vpn_key['config_text']}</pre>",
-    parse_mode="HTML",
+        "🔐 Твой VPN-конфиг:\n\n"
+        f"<pre>{vpn_key['config_text']}</pre>",
+        parse_mode="HTML",
     )
 
 

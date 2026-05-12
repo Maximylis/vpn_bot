@@ -1,6 +1,9 @@
 [flake8]
+per-file-ignores = 
+    backend/alembic/env.py:F401
 exclude =
     env,
     venv,
     __pycache__,
     .git
+    backend/alembic/versions

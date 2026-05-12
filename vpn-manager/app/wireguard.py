@@ -26,7 +26,9 @@ def _run(command: list[str], *, input_text: str | None = None) -> str:
         stderr = (exc.stderr or "").strip()
         stdout = (exc.stdout or "").strip()
         details = stderr or stdout or f"exit code {exc.returncode}"
-        raise WireGuardError(f"Command failed: {' '.join(command)}: {details}") from exc
+        raise WireGuardError(
+            f"Command failed: {' '.join(command)}: {details}"
+        ) from exc
 
     return result.stdout.strip()
 
@@ -67,7 +69,9 @@ def _delete_peer_state(peer_id: str) -> None:
     _peer_state_path(peer_id).unlink(missing_ok=True)
 
 
-def _used_ips_from_state() -> set[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+def _used_ips_from_state() -> set[
+    ipaddress.IPv4Address | ipaddress.IPv6Address
+]:
     used: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
     for path in _peer_state_dir().glob("*.json"):
         try:
@@ -78,7 +82,9 @@ def _used_ips_from_state() -> set[ipaddress.IPv4Address | ipaddress.IPv6Address]
     return used
 
 
-def _used_ips_from_wireguard() -> set[ipaddress.IPv4Address | ipaddress.IPv6Address]:
+def _used_ips_from_wireguard() -> set[
+    ipaddress.IPv4Address | ipaddress.IPv6Address
+]:
     used: set[ipaddress.IPv4Address | ipaddress.IPv6Address] = set()
     output = _run(["wg", "show", settings.wg_interface, "allowed-ips"])
 
