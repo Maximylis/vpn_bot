@@ -2,9 +2,9 @@ import os
 from datetime import datetime
 
 import requests
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from dotenv import load_dotenv
 
 
@@ -29,6 +29,16 @@ def api_headers() -> dict:
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+
+main_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🎁 Попробовать бесплатно 7 дней")],
+        [KeyboardButton(text="👤 Профиль")],
+        [KeyboardButton(text="🔐 Мой VPN-конфиг")],
+    ],
+    resize_keyboard=True,
+)
 
 
 def backend_post(path: str, json: dict | None = None):
@@ -74,9 +84,8 @@ async def start_handler(message: Message):
         "Привет! 👋\n\n"
         "Я VPN-бот.\n"
         f"Твой Telegram ID: {backend_user['telegram_id']}\n\n"
-        "Команды:\n"
-        "/profile — статус подписки\n"
-        "/myvpn — получить VPN-конфиг"
+        "Выбери действие кнопкой ниже:",
+        reply_markup=main_keyboard,
     )
 
 
@@ -141,6 +150,51 @@ async def myvpn_handler(message: Message):
         f"<pre>{vpn_key['config_text']}</pre>",
         parse_mode="HTML",
     )
+
+
+@dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
+async def trial_access_handler(message: Message):
+    telegram_id = message.from_user.id
+
+    try:
+        result = backend_post(f"/dev/grant-access/{telegram_id}")
+
+        if not result.get("ok"):
+            if result.get("reason") == "trial_already_used":
+                await message.answer(
+                    "🎁 Бесплатный тестовый период уже был использован.\n\n"
+                    "Текущий VPN-конфиг можно посмотреть через кнопку:\n"
+                    "🔐 Мой VPN-конфиг"
+                )
+                return
+
+        await message.answer(
+            "✅ Бесплатный доступ выдан на 7 дней!\n\n"
+            "🔐 Твой VPN-конфиг:\n\n"
+            f"<pre>{result['vpn_key']['config_text']}</pre>",
+            parse_mode="HTML",
+        )
+
+    except requests.HTTPError as error:
+        if error.response.status_code == 404:
+            await message.answer(
+                "Сначала нажми /start, чтобы зарегистрироваться."
+            )
+        else:
+            await message.answer(
+                "Не получилось выдать бесплатный доступ.\n"
+                "Попробуй позже."
+            )
+
+
+@dp.message(F.text == "👤 Профиль")
+async def profile_button_handler(message: Message):
+    await profile_handler(message)
+
+
+@dp.message(F.text == "🔐 Мой VPN-конфиг")
+async def myvpn_button_handler(message: Message):
+    await myvpn_handler(message)
 
 
 async def main():

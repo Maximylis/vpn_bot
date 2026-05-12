@@ -146,4 +146,13 @@ if settings.app_env == "development":
         telegram_id: int,
         db: Session = Depends(get_db),
     ):
-        return await crud.grant_test_access(db, telegram_id)
+        result = await crud.grant_test_access(
+            db=db,
+            telegram_id=telegram_id,
+            days=7,
+        )
+
+        if not result["ok"]:
+            return result
+
+        return result

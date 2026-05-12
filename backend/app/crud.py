@@ -123,7 +123,7 @@ def get_valid_active_subscription(
 async def grant_test_access(
     db: Session,
     telegram_id: int,
-    days: int = 30,
+    days: int = 7,
 ) -> dict:
     user = get_user_by_telegram_id(db, telegram_id)
 
@@ -131,6 +131,18 @@ async def grant_test_access(
         return {
             "ok": False,
             "reason": "user_not_found",
+        }
+
+    existing_subscription = (
+        db.query(models.Subscription)
+        .filter(models.Subscription.user_id == user.id)
+        .first()
+    )
+
+    if existing_subscription:
+        return {
+            "ok": False,
+            "reason": "trial_already_used",
         }
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
