@@ -4,7 +4,7 @@ from datetime import datetime
 import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile
 from dotenv import load_dotenv
 
 
@@ -65,6 +65,36 @@ def backend_get(path: str):
 def format_datetime(value: str) -> str:
     dt = datetime.fromisoformat(value)
     return dt.strftime("%d.%m.%Y")
+
+
+async def send_vpn_config_file(message: Message, config_text: str):
+    file = BufferedInputFile(
+        config_text.encode("utf-8"),
+        filename="wg-vpn.conf",
+    )
+
+    await message.answer_document(
+        document=file,
+        caption="📄 Ваш WireGuard конфиг.\n\nИмпортируйте файл в приложение WireGuard."
+    )
+
+
+async def send_vpn_config_qr(message: Message, config_text: str):
+    img = qrcode.make(config_text)
+
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    qr_file = BufferedInputFile(
+        buffer.read(),
+        filename="wg-vpn-qr.png",
+    )
+
+    await message.answer_photo(
+        photo=qr_file,
+        caption="📱 Отсканируйте QR-код в приложении WireGuard."
+    )
 
 
 @dp.message(Command("start"))
@@ -145,11 +175,8 @@ async def myvpn_handler(message: Message):
 
     vpn_key = access["vpn_keys"][0]
 
-    await message.answer(
-        "🔐 Твой VPN-конфиг:\n\n"
-        f"<pre>{vpn_key['config_text']}</pre>",
-        parse_mode="HTML",
-    )
+    await message.answer("🔐 Твой VPN-конфиг:")
+    await send_vpn_config_qr(message, vpn_key["config_text"])
 
 
 @dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
@@ -168,12 +195,8 @@ async def trial_access_handler(message: Message):
                 )
                 return
 
-        await message.answer(
-            "✅ Бесплатный доступ выдан на 7 дней!\n\n"
-            "🔐 Твой VPN-конфиг:\n\n"
-            f"<pre>{result['vpn_key']['config_text']}</pre>",
-            parse_mode="HTML",
-        )
+        await message.answer("✅ Бесплатный доступ выдан на 7 дней!")
+        await send_vpn_config_qr(message, result["vpn_key"]["config_text"])
 
     except requests.HTTPError as error:
         if error.response.status_code == 404:
