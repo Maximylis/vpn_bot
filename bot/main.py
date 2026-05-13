@@ -7,9 +7,11 @@ import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import (
-    Message, InlineKeyboardMarkup,
-    InlineKeyboardButton, BufferedInputFile,
-    CallbackQuery
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    BufferedInputFile,
+    CallbackQuery,
 )
 from dotenv import load_dotenv
 
@@ -27,12 +29,6 @@ if not API_TOKEN:
     raise RuntimeError("API_TOKEN is not set")
 
 
-def api_headers() -> dict:
-    return {
-        "X-API-Token": API_TOKEN,
-    }
-
-
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
@@ -42,23 +38,29 @@ main_keyboard = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text="🎁 Попробовать бесплатно 7 дней",
-                callback_data="trial_7_days"
+                callback_data="trial_7_days",
             )
         ],
         [
             InlineKeyboardButton(
                 text="👤 Профиль",
-                callback_data="profile"
+                callback_data="profile",
             )
         ],
         [
             InlineKeyboardButton(
                 text="🔐 Мой VPN-конфиг",
-                callback_data="my_vpn_config"
+                callback_data="my_vpn_config",
             )
         ],
     ]
 )
+
+
+def api_headers() -> dict:
+    return {
+        "X-API-Token": API_TOKEN,
+    }
 
 
 def backend_post(path: str, json: dict | None = None):
@@ -97,13 +99,12 @@ async def send_vpn_config_file(message: Message, config_text: str):
         document=file,
         caption=(
             "📄 Ваш WireGuard конфиг.\n\n"
-            "Импортируйте файл в приложение WireGuard.")
+            "Импортируйте файл в приложение WireGuard."
+        ),
     )
 
 
-async def send_vpn_config_qr(
-        message: Message, config_text: str
-):
+async def send_vpn_config_qr(message: Message, config_text: str):
     img = qrcode.make(config_text)
 
     buffer = io.BytesIO()
@@ -117,38 +118,11 @@ async def send_vpn_config_qr(
 
     await message.answer_photo(
         photo=qr_file,
-        caption="📱 Отсканируйте QR-код в приложении WireGuard."
+        caption="📱 Отсканируйте QR-код в приложении WireGuard.",
     )
 
 
-@dp.message(Command("start"))
-async def start_handler(message: Message):
-    user = message.from_user
-
-    payload = {
-        "telegram_id": user.id,
-        "username": user.username,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-    }
-
-    backend_post("/users", json=payload)
-
-    await message.answer(
-        "Добро пожаловать ✨\n\n"
-        "Вы подключились к премиальному VPN-сервису 🔒\n"
-        "⚡ Высокая скорость\n"
-        "🌍 Доступ без ограничений\n"
-        "🛡 Надежная защита данных\n"
-        "Выберите действие ниже 👇\n",
-        reply_markup=main_keyboard,
-    )
-
-
-@dp.message(Command("profile"))
-async def profile_handler(message: Message):
-    telegram_id = message.from_user.id
-
+async def show_profile(message: Message, telegram_id: int):
     access = backend_get(f"/users/{telegram_id}/access")
 
     if access["reason"] == "user_not_found":
@@ -175,10 +149,7 @@ async def profile_handler(message: Message):
     )
 
 
-@dp.message(Command("myvpn"))
-async def myvpn_handler(message: Message):
-    telegram_id = message.from_user.id
-
+async def show_myvpn(message: Message, telegram_id: int):
     access = backend_get(f"/users/{telegram_id}/access")
 
     if access["reason"] == "user_not_found":
@@ -205,10 +176,7 @@ async def myvpn_handler(message: Message):
     await send_vpn_config_qr(message, vpn_key["config_text"])
 
 
-@dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
-async def trial_access_handler(message: Message):
-    telegram_id = message.from_user.id
-
+async def grant_trial_access(message: Message, telegram_id: int):
     try:
         result = backend_post(f"/dev/grant-access/{telegram_id}")
 
@@ -220,6 +188,12 @@ async def trial_access_handler(message: Message):
                     "🔐 Мой VPN-конфиг"
                 )
                 return
+
+            await message.answer(
+                "Не получилось выдать бесплатный доступ.\n"
+                "Попробуй позже."
+            )
+            return
 
         await message.answer("✅ Бесплатный доступ выдан на 7 дней!")
         await send_vpn_config_qr(message, result["vpn_key"]["config_text"])
@@ -236,32 +210,98 @@ async def trial_access_handler(message: Message):
             )
 
 
+@dp.message(Command("start"))
+async def start_handler(message: Message):
+    user = message.from_user
+
+    payload = {
+        "telegram_id": user.id,
+        "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+    }
+
+    backend_post("/users", json=payload)
+
+    await message.answer(
+        "Добро пожаловать ✨\n\n"
+        "Вы подключились к премиальному VPN-сервису 🔒\n"
+        "⚡ Высокая скорость\n"
+        "🌍 Доступ без ограничений\n"
+        "🛡 Надежная защита данных\n\n"
+        "Выберите действие ниже 👇",
+        reply_markup=main_keyboard,
+    )
+
+
+@dp.message(Command("profile"))
+async def profile_handler(message: Message):
+    await show_profile(
+        message=message,
+        telegram_id=message.from_user.id,
+    )
+
+
+@dp.message(Command("myvpn"))
+async def myvpn_handler(message: Message):
+    await show_myvpn(
+        message=message,
+        telegram_id=message.from_user.id,
+    )
+
+
+@dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
+async def trial_access_button_handler(message: Message):
+    await grant_trial_access(
+        message=message,
+        telegram_id=message.from_user.id,
+    )
+
+
 @dp.message(F.text == "👤 Профиль")
 async def profile_button_handler(message: Message):
-    await profile_handler(message)
+    await show_profile(
+        message=message,
+        telegram_id=message.from_user.id,
+    )
 
 
 @dp.message(F.text == "🔐 Мой VPN-конфиг")
 async def myvpn_button_handler(message: Message):
-    await myvpn_handler(message)
+    await show_myvpn(
+        message=message,
+        telegram_id=message.from_user.id,
+    )
 
 
-@dp.callback_query(lambda c: c.data == "trial_7_days")
-async def trial_7_days(callback: CallbackQuery):
+@dp.callback_query(F.data == "trial_7_days")
+async def trial_7_days_callback(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer("🎁 Активируем пробный период на 7 дней")
+
+    await grant_trial_access(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+    )
 
 
-@dp.callback_query(lambda c: c.data == "profile")
-async def profile(callback: CallbackQuery):
+@dp.callback_query(F.data == "profile")
+async def profile_callback(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer("👤 Ваш профиль")
+
+    await show_profile(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+    )
 
 
-@dp.callback_query(lambda c: c.data == "my_vpn_config")
-async def my_vpn_config(callback: CallbackQuery):
+@dp.callback_query(F.data == "my_vpn_config")
+async def my_vpn_config_callback(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer("🔐 Ваш VPN-конфиг")
+
+    await show_myvpn(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+    )
 
 
 async def main():
