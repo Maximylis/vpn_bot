@@ -7,8 +7,9 @@ import requests
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import (
-    Message, ReplyKeyboardMarkup,
-    KeyboardButton, BufferedInputFile
+    Message, InlineKeyboardMarkup,
+    InlineKeyboardButton, BufferedInputFile,
+    CallbackQuery
 )
 from dotenv import load_dotenv
 
@@ -36,13 +37,27 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-main_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🎁 Попробовать бесплатно 7 дней")],
-        [KeyboardButton(text="👤 Профиль")],
-        [KeyboardButton(text="🔐 Мой VPN-конфиг")],
-    ],
-    resize_keyboard=True,
+main_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="🎁 Попробовать бесплатно 7 дней",
+                callback_data="trial_7_days"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="👤 Профиль",
+                callback_data="profile"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="🔐 Мой VPN-конфиг",
+                callback_data="my_vpn_config"
+            )
+        ],
+    ]
 )
 
 
@@ -120,10 +135,12 @@ async def start_handler(message: Message):
     backend_user = backend_post("/users", json=payload)
 
     await message.answer(
-        "Привет! 👋\n\n"
-        "Я VPN-бот.\n"
-        f"Твой Telegram ID: {backend_user['telegram_id']}\n\n"
-        "Выбери действие кнопкой ниже:",
+        "Добро пожаловать ✨\n\n"
+        "Вы подключились к премиальному VPN-сервису 🔒\n"
+        "⚡ Высокая скорость\n"
+        "🌍 Доступ без ограничений\n"
+        "🛡 Надежная защита данных\n"
+        "Выберите действие ниже 👇\n",
         reply_markup=main_keyboard,
     )
 
@@ -227,6 +244,24 @@ async def profile_button_handler(message: Message):
 @dp.message(F.text == "🔐 Мой VPN-конфиг")
 async def myvpn_button_handler(message: Message):
     await myvpn_handler(message)
+
+
+@dp.callback_query(lambda c: c.data == "trial_7_days")
+async def trial_7_days(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("🎁 Активируем пробный период на 7 дней")
+
+
+@dp.callback_query(lambda c: c.data == "profile")
+async def profile(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("👤 Ваш профиль")
+
+
+@dp.callback_query(lambda c: c.data == "my_vpn_config")
+async def my_vpn_config(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("🔐 Ваш VPN-конфиг")
 
 
 async def main():
