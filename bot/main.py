@@ -132,7 +132,7 @@ async def start_handler(message: Message):
         "last_name": user.last_name,
     }
 
-    backend_user = backend_post("/users", json=payload)
+    backend_post("/users", json=payload)
 
     await message.answer(
         "Добро пожаловать ✨\n\n"
