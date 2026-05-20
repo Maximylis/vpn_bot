@@ -91,6 +91,30 @@ info_keyboard = InlineKeyboardMarkup(
 )
 
 
+how_to_connect_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="📱 Телефон",
+                callback_data="instruction_phone"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="💻 Компьютер",
+                callback_data="instruction_computer"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message"
+            )
+        ]
+    ]
+)
+
+
 tariffs_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -635,7 +659,54 @@ async def tariffs_callback(callback: CallbackQuery):
 async def how_to_connect_callback(callback: CallbackQuery):
     await callback.answer()
     await callback.message.answer(
-        "Раздел в стадии разработки",
+        "📲 Выберите устройство:",
+        reply_markup=how_to_connect_keyboard
+    )
+
+
+@dp.callback_query(F.data == "instruction_phone")
+async def instruction_phone_callback(callback: CallbackQuery):
+    await callback.answer()
+    photo = BufferedInputFile(
+        open("assets/phone.png", "rb").read(),
+        filename="phone.png"
+    )
+    await callback.message.answer_photo(
+        photo=photo,
+        caption=(
+            "📱 Инструкция для подключения VPN на телефоне.\n\n"
+            "1. Установите приложение WireGuard:\n"
+            '<a href="https://apps.apple.com/app/wireguard/id1441195209">'
+            "Скачать приложение на iOS</a>\n"
+            '<a href="https://play.google.com/store/apps/details?'
+            'id=com.wireguard.android">'
+            "Скачать на Android</a>\n\n"
+            "2. После покупки вы получите конфигурацию WireGuard.\n"
+            "3. Добавьте конфигурацию через QR-код или файл."
+        ),
+        parse_mode="HTML",
+        reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "instruction_computer")
+async def instruction_computer_callback(callback: CallbackQuery):
+    await callback.answer()
+    photo = BufferedInputFile(
+        open("assets/computer.png", "rb").read(),
+        filename="computer.png"
+    )
+    await callback.message.answer_photo(
+        photo=photo,
+        caption=(
+            "💻 Инструкция для подключения VPN на компьютере.\n\n"
+            "1. Установите приложение WireGuard:\n"
+            '<a href="https://www.wireguard.com/install/">'
+            "Скачать WireGuard для компьютера</a>\n\n"
+            "2. После покупки вы получите конфигурационный файл WireGuard.\n"
+            "3. Импортируйте файл в приложение."
+        ),
+        parse_mode="HTML",
         reply_markup=back_delete_keyboard
     )
 
