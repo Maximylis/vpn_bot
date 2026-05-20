@@ -287,7 +287,7 @@ def format_datetime(value: str) -> str:
 async def send_vpn_config_file(
         message: Message,
         config_text: str,
-        reply_markup=reply_markup
+        reply_markup=None
 ):
     file = BufferedInputFile(
         config_text.encode("utf-8"),
@@ -298,9 +298,9 @@ async def send_vpn_config_file(
         document=file,
         caption=(
             "📄 Ваш WireGuard конфиг.\n\n"
-            "Импортируйте файл в приложение WireGuard.",
-            reply_markup=reply_markup
-        )
+            "Импортируйте файл в приложение WireGuard."
+        ),
+        reply_markup=reply_markup   
     )
 
 
