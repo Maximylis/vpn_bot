@@ -49,6 +49,12 @@ main_keyboard = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
+                text="🚀 Тарифы 🚀",
+                callback_data="tariffs"
+            )
+        ],
+        [
+            InlineKeyboardButton(
                 text="🔐 Мой VPN-конфиг",
                 callback_data="my_vpn_config",
             )
@@ -73,6 +79,42 @@ info_keyboard = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text="📄 Пользовательское соглашение",
                 callback_data="user_agreement",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message"
+            )
+        ]
+    ]
+)
+
+
+tariffs_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="1️⃣ месяц - 349₽",
+                callback_data="one_month"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="3️⃣ месяца - 889₽ -15%🔻",
+                callback_data="three_month"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="6️⃣ месяцев - 1.675₽ -20%🔻",
+                callback_data="six_month"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="1️⃣2️⃣ месяцев - 2.999₽ -30%🔻",
+                callback_data="twelth_month"
             )
         ],
         [
@@ -576,6 +618,23 @@ async def my_vpn_config_callback(callback: CallbackQuery):
     await show_myvpn(
         message=callback.message,
         telegram_id=callback.from_user.id,
+        reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "tariffs")
+async def tariffs_callback(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer(
+        "📆 Здесь вы можете выбрать подходящий тариф:",
+        reply_markup=tariffs_keyboard
+    )
+
+@dp.callback_query(F.data == "how_to_connect")
+async def how_to_connect_callback(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer(
+        "Раздел в стадии разработки",
         reply_markup=back_delete_keyboard
     )
 
