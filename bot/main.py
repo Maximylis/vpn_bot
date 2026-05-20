@@ -295,8 +295,7 @@ async def send_vpn_config_file(message: Message, config_text: str):
         caption=(
             "📄 Ваш WireGuard конфиг.\n\n"
             "Импортируйте файл в приложение WireGuard."
-        ),
-        reply_markup=back_delete_keyboard
+        )
     )
 
 
@@ -314,8 +313,7 @@ async def send_vpn_config_qr(message: Message, config_text: str):
 
     await message.answer_photo(
         photo=qr_file,
-        caption="📱 Отсканируйте QR-код в приложении WireGuard.",
-        reply_markup=back_delete_keyboard
+        caption="📱 Отсканируйте QR-код в приложении WireGuard."
     )
 
 
@@ -331,8 +329,7 @@ async def show_profile(message: Message, telegram_id: int):
 
     if not access["subscription"]:
         await message.answer(
-            "Профиль найден, но активной подписки пока нет.",
-            reply_markup=back_delete_keyboard
+            "Профиль найден, но активной подписки пока нет."
         )
         return
 
@@ -343,8 +340,7 @@ async def show_profile(message: Message, telegram_id: int):
     await message.answer(
         "👤 Профиль\n\n"
         f"Статус доступа: {access_status}\n"
-        f"Подписка до: {expires_at}",
-        reply_markup=back_delete_keyboard
+        f"Подписка до: {expires_at}"
     )
 
 
@@ -359,15 +355,13 @@ async def show_myvpn(message: Message, telegram_id: int):
 
     if access["reason"] == "no_active_subscription":
         await message.answer(
-            "У тебя нет активной подписки.",
-            reply_markup=back_delete_keyboard
+            "У тебя нет активной подписки."
         )
         return
 
     if access["reason"] == "no_active_vpn_keys":
         await message.answer(
-            "Подписка активна, но VPN-ключ ещё не выдан.",
-            reply_markup=back_delete_keyboard
+            "Подписка активна, но VPN-ключ ещё не выдан."
         )
         return
 
@@ -376,8 +370,7 @@ async def show_myvpn(message: Message, telegram_id: int):
     await message.answer("🔐 Твой VPN-конфиг:")
     await send_vpn_config_qr(
         message,
-        vpn_key["config_text"],
-        reply_markup=back_delete_keyboard
+        vpn_key["config_text"]
     )
 
 
@@ -390,21 +383,18 @@ async def grant_trial_access(message: Message, telegram_id: int):
                 await message.answer(
                     "🎁 Бесплатный тестовый период уже был использован.\n\n"
                     "Текущий VPN-конфиг можно посмотреть через кнопку:\n"
-                    "🔐 Мой VPN-конфиг",
-                    reply_markup=back_delete_keyboard
+                    "🔐 Мой VPN-конфиг"
                 )
                 return
 
             await message.answer(
                 "Не получилось выдать бесплатный доступ.\n"
-                "Попробуй позже.",
-                reply_markup=back_delete_keyboard
+                "Попробуй позже."
             )
             return
 
         await message.answer(
-            "✅ Бесплатный доступ выдан на 7 дней!",
-            reply_markup=back_delete_keyboard
+            "✅ Бесплатный доступ выдан на 7 дней!"
         )
         await send_vpn_config_qr(message, result["vpn_key"]["config_text"])
 
@@ -449,6 +439,7 @@ async def profile_handler(message: Message):
     await show_profile(
         message=message,
         telegram_id=message.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -457,6 +448,7 @@ async def myvpn_handler(message: Message):
     await show_myvpn(
         message=message,
         telegram_id=message.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -465,6 +457,7 @@ async def trial_access_button_handler(message: Message):
     await grant_trial_access(
         message=message,
         telegram_id=message.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -473,6 +466,7 @@ async def profile_button_handler(message: Message):
     await show_profile(
         message=message,
         telegram_id=message.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -481,6 +475,7 @@ async def myvpn_button_handler(message: Message):
     await show_myvpn(
         message=message,
         telegram_id=message.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -491,6 +486,7 @@ async def info_callback(callback: CallbackQuery):
     await callback.message.answer(
         INFO_TEXT,
         reply_markup=info_keyboard,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -500,7 +496,7 @@ async def user_agreement_callback(callback: CallbackQuery):
 
     await callback.message.answer(
         USER_AGREEMENT_TEXT,
-        reply_markup=agreement_keyboard,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -517,6 +513,7 @@ async def trial_7_days_callback(callback: CallbackQuery):
     await grant_trial_access(
         message=callback.message,
         telegram_id=callback.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -527,6 +524,7 @@ async def profile_callback(callback: CallbackQuery):
     await show_profile(
         message=callback.message,
         telegram_id=callback.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -537,6 +535,7 @@ async def my_vpn_config_callback(callback: CallbackQuery):
     await show_myvpn(
         message=callback.message,
         telegram_id=callback.from_user.id,
+        reply_markup=back_delete_keyboard
     )
 
 
