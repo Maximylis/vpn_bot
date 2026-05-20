@@ -79,8 +79,7 @@ info_keyboard = InlineKeyboardMarkup(
 )
 
 
-# ДОБАВЛЕНО: кнопка назад под соглашением
-agreement_keyboard = InlineKeyboardMarkup(
+back_delete_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
@@ -106,8 +105,8 @@ INFO_TEXT = (
 
 USER_AGREEMENT_TEXT = (
     "📜 Пользовательское соглашение\n\n"
-    "Дата вступления в силу: 09.03.2026\n"
-    "Последнее обновление: 09.03.2026\n"
+    "Дата вступления в силу: 17.05.2026\n"
+    "Последнее обновление: 17.05.2026\n"
 
     "Настоящее Пользовательское соглашение "
     "(далее — «Соглашение») регулирует порядок "
@@ -297,6 +296,7 @@ async def send_vpn_config_file(message: Message, config_text: str):
             "📄 Ваш WireGuard конфиг.\n\n"
             "Импортируйте файл в приложение WireGuard."
         ),
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -315,6 +315,7 @@ async def send_vpn_config_qr(message: Message, config_text: str):
     await message.answer_photo(
         photo=qr_file,
         caption="📱 Отсканируйте QR-код в приложении WireGuard.",
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -330,7 +331,8 @@ async def show_profile(message: Message, telegram_id: int):
 
     if not access["subscription"]:
         await message.answer(
-            "Профиль найден, но активной подписки пока нет."
+            "Профиль найден, но активной подписки пока нет.",
+            reply_markup=back_delete_keyboard
         )
         return
 
@@ -341,7 +343,8 @@ async def show_profile(message: Message, telegram_id: int):
     await message.answer(
         "👤 Профиль\n\n"
         f"Статус доступа: {access_status}\n"
-        f"Подписка до: {expires_at}"
+        f"Подписка до: {expires_at}",
+        reply_markup=back_delete_keyboard
     )
 
 
@@ -356,20 +359,26 @@ async def show_myvpn(message: Message, telegram_id: int):
 
     if access["reason"] == "no_active_subscription":
         await message.answer(
-            "У тебя нет активной подписки."
+            "У тебя нет активной подписки.",
+            reply_markup=back_delete_keyboard
         )
         return
 
     if access["reason"] == "no_active_vpn_keys":
         await message.answer(
-            "Подписка активна, но VPN-ключ ещё не выдан."
+            "Подписка активна, но VPN-ключ ещё не выдан.",
+            reply_markup=back_delete_keyboard
         )
         return
 
     vpn_key = access["vpn_keys"][0]
 
     await message.answer("🔐 Твой VPN-конфиг:")
-    await send_vpn_config_qr(message, vpn_key["config_text"])
+    await send_vpn_config_qr(
+        message,
+        vpn_key["config_text"],
+        reply_markup=back_delete_keyboard
+    )
 
 
 async def grant_trial_access(message: Message, telegram_id: int):
@@ -381,17 +390,22 @@ async def grant_trial_access(message: Message, telegram_id: int):
                 await message.answer(
                     "🎁 Бесплатный тестовый период уже был использован.\n\n"
                     "Текущий VPN-конфиг можно посмотреть через кнопку:\n"
-                    "🔐 Мой VPN-конфиг"
+                    "🔐 Мой VPN-конфиг",
+                    reply_markup=back_delete_keyboard
                 )
                 return
 
             await message.answer(
                 "Не получилось выдать бесплатный доступ.\n"
-                "Попробуй позже."
+                "Попробуй позже.",
+                reply_markup=back_delete_keyboard
             )
             return
 
-        await message.answer("✅ Бесплатный доступ выдан на 7 дней!")
+        await message.answer(
+            "✅ Бесплатный доступ выдан на 7 дней!",
+            reply_markup=back_delete_keyboard
+        )
         await send_vpn_config_qr(message, result["vpn_key"]["config_text"])
 
     except requests.HTTPError as error:
@@ -470,7 +484,6 @@ async def myvpn_button_handler(message: Message):
     )
 
 
-# ДОБАВЛЕНО: обработчик кнопки "Информация"
 @dp.callback_query(F.data == "info")
 async def info_callback(callback: CallbackQuery):
     await callback.answer()
@@ -481,7 +494,6 @@ async def info_callback(callback: CallbackQuery):
     )
 
 
-# ДОБАВЛЕНО: обработчик кнопки "Пользовательское соглашение"
 @dp.callback_query(F.data == "user_agreement")
 async def user_agreement_callback(callback: CallbackQuery):
     await callback.answer()
@@ -492,11 +504,9 @@ async def user_agreement_callback(callback: CallbackQuery):
     )
 
 
-# ДОБАВЛЕНО: удаляет сообщение с соглашением при нажатии "Назад"
 @dp.callback_query(F.data == "delete_message")
 async def delete_message_callback(callback: CallbackQuery):
     await callback.answer()
-
     await callback.message.delete()
 
 
