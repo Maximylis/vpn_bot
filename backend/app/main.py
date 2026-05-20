@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -6,9 +8,15 @@ from app import crud, schemas
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.security import verify_api_token
+from app.tasks import revoke_expired_access_loop
 
 
 app = FastAPI(title="VPN Bot Backend")
+
+
+@app.on_event("startup")
+async def start_revoke_expired_access_task():
+    asyncio.create_task(revoke_expired_access_loop())
 
 
 @app.get("/health")
