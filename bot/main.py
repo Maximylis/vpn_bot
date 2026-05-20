@@ -151,6 +151,30 @@ tariffs_keyboard = InlineKeyboardMarkup(
 )
 
 
+vpn_config_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="📷 QR-код",
+                callback_data="vpn_qr"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📄 Файл .conf",
+                callback_data="vpn_file"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message"
+            )
+        ]
+    ]
+)
+
+
 back_delete_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -436,6 +460,7 @@ async def show_profile(
 async def show_myvpn(
         message: Message,
         telegram_id: int,
+        config_format: str,
         reply_markup=None
 ):
     access = backend_get(f"/users/{telegram_id}/access")
@@ -449,7 +474,7 @@ async def show_myvpn(
 
     if access["reason"] == "no_active_subscription":
         await message.answer(
-            "У тебя нет активной подписки.",
+            "🚫 У тебя нет активной подписки. 🚫",
             reply_markup=reply_markup
         )
         return
@@ -463,12 +488,19 @@ async def show_myvpn(
 
     vpn_key = access["vpn_keys"][0]
 
-    await message.answer("🔐 Твой VPN-конфиг:")
-    await send_vpn_config_qr(
-        message,
-        vpn_key["config_text"],
-        reply_markup=reply_markup
-    )
+    if config_format == "qr":
+        await send_vpn_config_qr(
+            message,
+            vpn_key["config_text"],
+            reply_markup=reply_markup
+        )
+
+    if config_format == "file":
+        await send_vpn_config_file(
+            message,
+            vpn_key["config_text"],
+            reply_markup=reply_markup
+        )
 
 
 async def grant_trial_access(
@@ -497,7 +529,9 @@ async def grant_trial_access(
             return
 
         await message.answer(
-            "✅ Бесплатный доступ выдан на 7 дней!"
+            "✅ Бесплатный доступ выдан на 7 дней!\n\n"
+            "Инструкция по подключению можно посмотреть через кнопку:\n"
+            "📲 Как подключить?"
         )
         await send_vpn_config_qr(
             message,
@@ -638,10 +672,32 @@ async def profile_callback(callback: CallbackQuery):
 @dp.callback_query(F.data == "my_vpn_config")
 async def my_vpn_config_callback(callback: CallbackQuery):
     await callback.answer()
+    await callback.message.answer(
+        "🔐 Выберите формат VPN-конфига:",
+        reply_markup=vpn_config_keyboard
+    )
+
+
+@dp.callback_query(F.data == "vpn_qr")
+async def vpn_qr_callback(callback: CallbackQuery):
+    await callback.answer()
 
     await show_myvpn(
         message=callback.message,
         telegram_id=callback.from_user.id,
+        config_format="qr",
+        reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "vpn_file")
+async def vpn_file_callback(callback: CallbackQuery):
+    await callback.answer()
+
+    await show_myvpn(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+        config_format="file",
         reply_markup=back_delete_keyboard
     )
 
