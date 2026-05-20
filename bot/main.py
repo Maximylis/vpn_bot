@@ -75,6 +75,12 @@ info_keyboard = InlineKeyboardMarkup(
                 callback_data="user_agreement",
             )
         ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message"
+            )
+        ]
     ]
 )
 
