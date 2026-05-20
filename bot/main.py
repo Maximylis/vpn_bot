@@ -284,7 +284,11 @@ def format_datetime(value: str) -> str:
     return dt.strftime("%d.%m.%Y")
 
 
-async def send_vpn_config_file(message: Message, config_text: str):
+async def send_vpn_config_file(
+        message: Message,
+        config_text: str,
+        reply_markup=reply_markup
+):
     file = BufferedInputFile(
         config_text.encode("utf-8"),
         filename="wg-vpn.conf",
@@ -294,12 +298,17 @@ async def send_vpn_config_file(message: Message, config_text: str):
         document=file,
         caption=(
             "📄 Ваш WireGuard конфиг.\n\n"
-            "Импортируйте файл в приложение WireGuard."
+            "Импортируйте файл в приложение WireGuard.",
+            reply_markup=reply_markup
         )
     )
 
 
-async def send_vpn_config_qr(message: Message, config_text: str):
+async def send_vpn_config_qr(
+        message: Message,
+        config_text: str,
+        reply_markup=None
+):
     img = qrcode.make(config_text)
 
     buffer = io.BytesIO()
@@ -313,23 +322,30 @@ async def send_vpn_config_qr(message: Message, config_text: str):
 
     await message.answer_photo(
         photo=qr_file,
-        caption="📱 Отсканируйте QR-код в приложении WireGuard."
+        caption="📱 Отсканируйте QR-код в приложении WireGuard.",
+        reply_markup=reply_markup
     )
 
 
-async def show_profile(message: Message, telegram_id: int):
+async def show_profile(
+        message: Message,
+        telegram_id: int,
+        reply_markup=None
+):
     access = backend_get(f"/users/{telegram_id}/access")
 
     if access["reason"] == "user_not_found":
         await message.answer(
             "Я пока не нашёл твой профиль.\n"
-            "Нажми /start, чтобы зарегистрироваться."
+            "Нажми /start, чтобы зарегистрироваться.",
+            reply_markup=reply_markup
         )
         return
 
     if not access["subscription"]:
         await message.answer(
-            "Профиль найден, но активной подписки пока нет."
+            "Профиль найден, но активной подписки пока нет.",
+            reply_markup=reply_markup
         )
         return
 
@@ -340,28 +356,36 @@ async def show_profile(message: Message, telegram_id: int):
     await message.answer(
         "👤 Профиль\n\n"
         f"Статус доступа: {access_status}\n"
-        f"Подписка до: {expires_at}"
+        f"Подписка до: {expires_at}",
+        reply_markup=reply_markup
     )
 
 
-async def show_myvpn(message: Message, telegram_id: int):
+async def show_myvpn(
+        message: Message,
+        telegram_id: int,
+        reply_markup=None
+):
     access = backend_get(f"/users/{telegram_id}/access")
 
     if access["reason"] == "user_not_found":
         await message.answer(
-            "Сначала нажми /start, чтобы зарегистрироваться."
+            "Сначала нажми /start, чтобы зарегистрироваться.",
+            reply_markup=reply_markup
         )
         return
 
     if access["reason"] == "no_active_subscription":
         await message.answer(
-            "У тебя нет активной подписки."
+            "У тебя нет активной подписки.",
+            reply_markup=reply_markup
         )
         return
 
     if access["reason"] == "no_active_vpn_keys":
         await message.answer(
-            "Подписка активна, но VPN-ключ ещё не выдан."
+            "Подписка активна, но VPN-ключ ещё не выдан.",
+            reply_markup=reply_markup
         )
         return
 
@@ -370,11 +394,16 @@ async def show_myvpn(message: Message, telegram_id: int):
     await message.answer("🔐 Твой VPN-конфиг:")
     await send_vpn_config_qr(
         message,
-        vpn_key["config_text"]
+        vpn_key["config_text"],
+        reply_markup=reply_markup
     )
 
 
-async def grant_trial_access(message: Message, telegram_id: int):
+async def grant_trial_access(
+        message: Message,
+        telegram_id: int,
+        reply_markup=None
+):
     try:
         result = backend_post(f"/dev/grant-access/{telegram_id}")
 
@@ -383,20 +412,26 @@ async def grant_trial_access(message: Message, telegram_id: int):
                 await message.answer(
                     "🎁 Бесплатный тестовый период уже был использован.\n\n"
                     "Текущий VPN-конфиг можно посмотреть через кнопку:\n"
-                    "🔐 Мой VPN-конфиг"
+                    "🔐 Мой VPN-конфиг",
+                    reply_markup=reply_markup
                 )
                 return
 
             await message.answer(
                 "Не получилось выдать бесплатный доступ.\n"
-                "Попробуй позже."
+                "Попробуй позже.",
+                reply_markup=reply_markup
             )
             return
 
         await message.answer(
             "✅ Бесплатный доступ выдан на 7 дней!"
         )
-        await send_vpn_config_qr(message, result["vpn_key"]["config_text"])
+        await send_vpn_config_qr(
+            message,
+            result["vpn_key"]["config_text"],
+            reply_markup=reply_markup
+        )
 
     except requests.HTTPError as error:
         if error.response.status_code == 404:
@@ -406,7 +441,8 @@ async def grant_trial_access(message: Message, telegram_id: int):
         else:
             await message.answer(
                 "Не получилось выдать бесплатный доступ.\n"
-                "Попробуй позже."
+                "Попробуй позже.",
+                reply_markup=reply_markup
             )
 
 
@@ -485,8 +521,7 @@ async def info_callback(callback: CallbackQuery):
 
     await callback.message.answer(
         INFO_TEXT,
-        reply_markup=info_keyboard,
-        reply_markup=back_delete_keyboard
+        reply_markup=info_keyboard
     )
 
 
