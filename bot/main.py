@@ -300,7 +300,7 @@ async def send_vpn_config_file(
             "📄 Ваш WireGuard конфиг.\n\n"
             "Импортируйте файл в приложение WireGuard."
         ),
-        reply_markup=reply_markup   
+        reply_markup=reply_markup
     )
 
 
