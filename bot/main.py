@@ -630,6 +630,7 @@ async def tariffs_callback(callback: CallbackQuery):
         reply_markup=tariffs_keyboard
     )
 
+
 @dp.callback_query(F.data == "how_to_connect")
 async def how_to_connect_callback(callback: CallbackQuery):
     await callback.answer()
