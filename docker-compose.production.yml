@@ -18,7 +18,6 @@ services:
       - .env
     volumes:
       - /var/lib/vpn-manager:/var/lib/vpn-manager
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 10s
@@ -31,13 +30,11 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    ports:
+    - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_started
-      vpn-manager:
-        condition: service_healthy
-    expose:
-      - "8000"
+      - postgres
+      - vpn-manager
 
   bot:
     image: maximylis/vpn-bot:latest
@@ -45,20 +42,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-
-    depends_on:
-      - backend
-
-  nginx:
-    image: nginx:alpine
-    container_name: vpn_bot_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - backend
 
