@@ -406,7 +406,7 @@ async def grant_trial_access(
                 "Попробуй позже.",
                 reply_markup=reply_markup
             )
-а 
+
 
 @dp.message(Command("start"))
 async def start_handler(message: Message):
