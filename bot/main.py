@@ -408,6 +408,54 @@ async def grant_trial_access(
             )
 
 
+def payment_keyboard(url: str):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="💳 Оплатить",
+                    url=url,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Назад",
+                    callback_data="delete_message",
+                )
+            ],
+        ]
+    )
+
+
+async def create_payment(
+        message: Message,
+        telegram_id: int,
+        tariff: str,
+):
+    try:
+        result = backend_post(
+            "/payments/create",
+            json={
+                "telegram_id": telegram_id,
+                "tariff": tariff,
+            }
+        )
+
+        await message.answer(
+            "💳 Счёт на оплату создан.\n\n"
+            "После оплаты подписка активируется автоматически.\n"
+            "Затем нажмите «🔐 Мой VPN-конфиг».",
+            reply_markup=payment_keyboard(result["confirmation_url"])
+        )
+
+    except requests.HTTPError:
+        await message.answer(
+            "Не получилось создать счёт на оплату.\n"
+            "Попробуй позже.",
+            reply_markup=back_delete_keyboard
+        )
+
+
 @dp.message(Command("start"))
 async def start_handler(message: Message):
     user = message.from_user
@@ -610,6 +658,46 @@ async def instruction_computer_callback(callback: CallbackQuery):
         ),
         parse_mode="HTML",
         reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "one_month")
+async def one_month_callback(callback: CallbackQuery):
+    await callback.answer()
+    await create_payment(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+        tariff="one_month",
+    )
+
+
+@dp.callback_query(F.data == "three_month")
+async def three_month_callback(callback: CallbackQuery):
+    await callback.answer()
+    await create_payment(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+        tariff="three_month",
+    )
+
+
+@dp.callback_query(F.data == "six_month")
+async def six_month_callback(callback: CallbackQuery):
+    await callback.answer()
+    await create_payment(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+        tariff="six_month",
+    )
+
+
+@dp.callback_query(F.data == "twelth_month")
+async def twelth_month_callback(callback: CallbackQuery):
+    await callback.answer()
+    await create_payment(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
+        tariff="twelth_month",
     )
 
 

@@ -6,3 +6,5 @@ python-dotenv==1.0.1
 pydantic-settings
 httpx
 alembic
+yookassa
+python-dateutil

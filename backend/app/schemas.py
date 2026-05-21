@@ -74,3 +74,25 @@ class GrantAccessRead(BaseModel):
     user: UserRead | None = None
     subscription: SubscriptionRead | None = None
     vpn_key: VpnKeyRead | None = None
+
+
+class PaymentCreateRequest(BaseModel):
+    telegram_id: int
+    tariff: str
+
+
+class PaymentCreateResponse(BaseModel):
+    ok: bool
+    payment_id: int
+    yookassa_payment_id: str
+    confirmation_url: str
+
+
+class YookassaWebhookObject(BaseModel):
+    id: str
+
+
+class YookassaWebhookRequest(BaseModel):
+    type: str
+    event: str
+    object: YookassaWebhookObject

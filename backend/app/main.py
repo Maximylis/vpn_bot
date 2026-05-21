@@ -1,14 +1,18 @@
 import asyncio
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+from decimal import Decimal
 
 from app import crud, schemas
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.security import verify_api_token
 from app.tasks import revoke_expired_access_loop
+from app.tariffs import TARIFFS
+from app.services.yookassa_service import create_yookassa_payment
 
 
 app = FastAPI(title="VPN Bot Backend")
@@ -164,3 +168,99 @@ if settings.app_env == "development":
             return result
 
         return result
+
+
+@app.post(
+    "/payments/create",
+    response_model=schemas.PaymentCreateResponse,
+    dependencies=[Depends(verify_api_token)],
+)
+async def create_payment(
+    payment_data: schemas.PaymentCreateRequest,
+    db: Session = Depends(get_db),
+):
+    user = crud.get_user_by_telegram_id(
+        db,
+        payment_data.telegram_id,
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    tariff = TARIFFS.get(payment_data.tariff)
+
+    if not tariff:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid tariff",
+        )
+
+    yookassa_payment = create_yookassa_payment(
+        amount=tariff["amount"],
+        description=tariff["title"],
+        telegram_id=user.telegram_id,
+        tariff=payment_data.tariff,
+    )
+
+    payment = crud.create_payment(
+        db=db,
+        user_id=user.id,
+        tariff=payment_data.tariff,
+        amount=Decimal(tariff["amount"]),
+        yookassa_payment_id=yookassa_payment.id,
+        confirmation_url=(
+            yookassa_payment.confirmation.confirmation_url
+        ),
+    )
+
+    return {
+        "ok": True,
+        "payment_id": payment.id,
+        "yookassa_payment_id": yookassa_payment.id,
+        "confirmation_url": (
+            yookassa_payment.confirmation.confirmation_url
+        ),
+    }
+
+
+@app.post("/payments/yookassa/webhook")
+async def yookassa_webhook(
+    webhook_data: schemas.YookassaWebhookRequest,
+    db: Session = Depends(get_db),
+):
+    if webhook_data.event != "payment.succeeded":
+        return {
+            "ok": True,
+            "ignored": True,
+            "event": webhook_data.event,
+        }
+
+    payment = crud.get_payment_by_yookassa_id(
+        db=db,
+        yookassa_payment_id=webhook_data.object.id,
+    )
+
+    if not payment:
+        return {
+            "ok": False,
+            "reason": "payment_not_found",
+        }
+
+    tariff = TARIFFS.get(payment.tariff)
+
+    if not tariff:
+        return {
+            "ok": False,
+            "reason": "invalid_tariff",
+        }
+
+    result = await crud.activate_paid_subscription(
+        db=db,
+        payment=payment,
+        months=tariff["months"],
+    )
+
+    return result

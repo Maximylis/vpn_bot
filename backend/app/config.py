@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     vpn_manager_url: str = "http://vpn-manager:9000"
     vpn_manager_api_token: str
 
+    yookassa_shop_id: str
+    yookassa_secret_key: str
+    yookassa_return_url: str
+
     postgres_db: str
     postgres_user: str
     postgres_password: str

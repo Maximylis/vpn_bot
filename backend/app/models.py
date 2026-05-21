@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Numeric,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +30,12 @@ class VpnKeyStatus(str, Enum):
     active = "active"
     revoked = "revoked"
     expired = "expired"
+
+
+class PaymentStatus(str, Enum):
+    pending = "pending"
+    succeeded = "succeeded"
+    cancelled = "cancelled"
 
 
 class User(Base):
@@ -72,6 +79,11 @@ class User(Base):
     )
 
     subscriptions: Mapped[list["Subscription"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    payments: Mapped[list["Payment"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
@@ -159,3 +171,45 @@ class Subscription(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="subscriptions")
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    tariff: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+
+    status: Mapped[str] = mapped_column(
+        String(50),
+        default=PaymentStatus.pending.value,
+        nullable=False,
+        index=True,
+    )
+
+    yookassa_payment_id: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
+    confirmation_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=utc_now,
+        nullable=False,
+    )
+
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="payments")
