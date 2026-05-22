@@ -540,7 +540,7 @@ async def start_handler(message: Message):
     backend_post("/users", json=payload)
 
     await message.answer(
-        "Добро пожаловать ✨\n\n"
+        "Добро пожаловать! ✨\n\n"
         "Вы подключились к премиальному VPN-сервису 🔒\n"
         "⚡ Высокая скорость\n"
         "🌍 Доступ без ограничений\n"
