@@ -21,6 +21,9 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 API_TOKEN = os.getenv("API_TOKEN")
+REQUIRED_CHANNEL = os.getenv("REQUIRED_CHANNEL")
+REQUIRED_CHANNEL_URL = os.getenv("REQUIRED_CHANNEL_URL")
+
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set")
@@ -177,6 +180,30 @@ vpn_config_keyboard = InlineKeyboardMarkup(
                 callback_data="delete_message"
             )
         ]
+    ]
+)
+
+
+subscribe_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="📢 Подписаться на канал",
+                url=REQUIRED_CHANNEL_URL,
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="✅ Я подписался",
+                callback_data="check_subscription_trial",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message",
+            )
+        ],
     ]
 )
 
@@ -456,6 +483,49 @@ async def create_payment(
         )
 
 
+async def is_subscribed_to_channel(user_id: int) -> bool:
+    if not REQUIRED_CHANNEL:
+        return True
+
+    member = await bot.get_chat_member(
+        chat_id=REQUIRED_CHANNEL,
+        user_id=user_id,
+    )
+
+    return member.status in ("member", "administrator", "creator")
+
+
+async def check_subscription_and_grant_trial(
+        message: Message,
+        telegram_id: int,
+):
+    try:
+        is_subscribed = await is_subscribed_to_channel(telegram_id)
+
+        if not is_subscribed:
+            await message.answer(
+                "📢 Чтобы получить бесплатный VPN на 7 дней,\n"
+                "сначала подпишись на наш Telegram-канал.\n\n"
+                "После подписки нажми кнопку:\n"
+                "✅ Я подписался",
+                reply_markup=subscribe_keyboard,
+            )
+            return
+
+        await grant_trial_access(
+            message=message,
+            telegram_id=telegram_id,
+            reply_markup=back_delete_keyboard,
+        )
+
+    except Exception:
+        await message.answer(
+            "Не удалось проверить подписку на канал.\n\n"
+            "Убедись, что ты подписался, и попробуй ещё раз.",
+            reply_markup=subscribe_keyboard,
+        )
+
+
 @dp.message(Command("start"))
 async def start_handler(message: Message):
     user = message.from_user
@@ -500,10 +570,9 @@ async def myvpn_handler(message: Message):
 
 @dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
 async def trial_access_button_handler(message: Message):
-    await grant_trial_access(
+    await check_subscription_and_grant_trial(
         message=message,
         telegram_id=message.from_user.id,
-        reply_markup=back_delete_keyboard
     )
 
 
@@ -543,12 +612,21 @@ async def delete_message_callback(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "trial_7_days")
 async def trial_7_days_callback(callback: CallbackQuery):
-    await callback.answer()
+    await callback.answer("Проверяю подписку...")
 
-    await grant_trial_access(
+    await check_subscription_and_grant_trial(
         message=callback.message,
         telegram_id=callback.from_user.id,
-        reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "check_subscription_trial")
+async def check_subscription_trial_callback(callback: CallbackQuery):
+    await callback.answer("Проверяю подписку...")
+
+    await check_subscription_and_grant_trial(
+        message=callback.message,
+        telegram_id=callback.from_user.id,
     )
 
 
