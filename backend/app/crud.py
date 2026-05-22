@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 from app import models, schemas
 from app.vpn_manager_client import create_peer
+from app.services.telegram_service import send_payment_success_message
 
 
 def get_user_by_telegram_id(
@@ -303,6 +304,11 @@ async def activate_paid_subscription(
     payment.paid_at = now
 
     db.commit()
+
+    await send_payment_success_message(
+        telegram_id=user.telegram_id,
+        expires_at=subscription.expires_at.strftime("%d.%m.%Y"),
+    )
 
     return {
         "ok": True,
