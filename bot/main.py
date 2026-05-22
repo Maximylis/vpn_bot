@@ -345,7 +345,7 @@ async def show_profile(
 async def show_myvpn(
         message: Message,
         telegram_id: int,
-        config_format: str,
+        config_format: str = "qr",
         reply_markup=None
 ):
     access = backend_get(f"/users/{telegram_id}/access")
