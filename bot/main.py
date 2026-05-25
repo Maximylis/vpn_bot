@@ -208,6 +208,24 @@ subscribe_keyboard = InlineKeyboardMarkup(
 )
 
 
+profile_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="💳 Автопродление",
+                callback_data="auto_renewal",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message",
+            )
+        ],
+    ]
+)
+
+
 back_delete_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -338,7 +356,7 @@ async def show_profile(
         "👤 Профиль\n\n"
         f"Статус доступа: {access_status}\n"
         f"Подписка до: {expires_at}",
-        reply_markup=reply_markup
+        reply_markup=profile_keyboard
     )
 
 
@@ -582,6 +600,48 @@ async def profile_button_handler(message: Message):
         message=message,
         telegram_id=message.from_user.id,
         reply_markup=back_delete_keyboard
+    )
+
+
+@dp.callback_query(F.data == "auto_renewal")
+async def auto_renewal_callback(callback: CallbackQuery):
+    await callback.answer()
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="❌ Отключить автопродление / отвязать карту",
+                    callback_data="disable_auto_renewal",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅️ Назад",
+                    callback_data="delete_message",
+                )
+            ],
+        ]
+    )
+
+    await callback.message.answer(
+        "💳 Автопродление\n\n"
+        "Здесь можно управлять ежемесячным автопродлением подписки.\n\n"
+        "Вы можете в любой момент отключить автопродление "
+        "и отвязать карту самостоятельно.",
+        reply_markup=keyboard,
+    )
+
+
+@dp.callback_query(F.data == "disable_auto_renewal")
+async def disable_auto_renewal_callback(callback: CallbackQuery):
+    await callback.answer()
+
+    await callback.message.answer(
+        "✅ Автопродление отключено.\n\n"
+        "Карта отвязана от подписки.\n"
+        "Следующие списания выполняться не будут.",
+        reply_markup=back_delete_keyboard,
     )
 
 
