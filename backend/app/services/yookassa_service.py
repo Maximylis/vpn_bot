@@ -25,7 +25,6 @@ def create_yookassa_payment(
             "return_url": settings.yookassa_return_url,
         },
         "capture": True,
-        "save_payment_method": True,
         "description": description,
         "receipt": {
             "customer": {
