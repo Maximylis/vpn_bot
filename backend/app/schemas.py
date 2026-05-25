@@ -47,6 +47,7 @@ class SubscriptionCreate(BaseModel):
     user_id: int
     starts_at: datetime
     expires_at: datetime
+    is_trial: bool = False
 
 
 class SubscriptionRead(BaseModel):
@@ -58,6 +59,9 @@ class SubscriptionRead(BaseModel):
     starts_at: datetime
     expires_at: datetime
     created_at: datetime
+    is_trial: bool
+    trial_penultimate_day_notified: bool
+    trial_lastday_notified: bool
 
 
 class UserAccessRead(BaseModel):

@@ -171,6 +171,7 @@ async def grant_test_access(
             status="active",
             starts_at=now,
             expires_at=expires_at,
+            is_trial=True,
         )
         db.add(subscription)
 
@@ -267,12 +268,18 @@ async def activate_paid_subscription(
         subscription.expires_at = subscription.expires_at + relativedelta(
             months=months
         )
+        subscription.is_trial = False
+        subscription.trial_penultimate_day_notified = True
+        subscription.trial_lastday_notified = True
     else:
         subscription = models.Subscription(
             user_id=user.id,
             status=models.SubscriptionStatus.active.value,
             starts_at=now,
             expires_at=now + relativedelta(months=months),
+            is_trial=False,
+            trial_penultimate_day_notified=True,
+            trial_lastday_notified=True,
         )
         db.add(subscription)
 

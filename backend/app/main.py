@@ -10,7 +10,10 @@ from app import crud, schemas
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.security import verify_api_token
-from app.tasks import revoke_expired_access_loop
+from app.tasks import (
+    revoke_expired_access_loop,
+    send_trial_notifications_loop,
+)
 from app.tariffs import TARIFFS
 from app.services.yookassa_service import create_yookassa_payment
 
@@ -19,8 +22,9 @@ app = FastAPI(title="VPN Bot Backend")
 
 
 @app.on_event("startup")
-async def start_revoke_expired_access_task():
+async def start_background_tasks():
     asyncio.create_task(revoke_expired_access_loop())
+    asyncio.create_task(send_trial_notifications_loop())
 
 
 @app.get("/health")

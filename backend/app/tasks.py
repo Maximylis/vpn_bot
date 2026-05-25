@@ -5,6 +5,11 @@ from datetime import datetime, timezone
 from app import models
 from app.database import SessionLocal
 from app.vpn_manager_client import delete_peer
+from app.services.telegram_service import (
+    send_trial_penultimate_day_notified_message,
+    send_trial_lastday_message,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,3 +68,65 @@ async def revoke_expired_access_loop() -> None:
     while True:
         await revoke_expired_access_once()
         await asyncio.sleep(300)
+
+
+async def send_trial_notifications_once() -> None:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    db = SessionLocal()
+
+    try:
+        subscriptions = (
+            db.query(models.Subscription)
+            .filter(
+                models.Subscription.status == "active",
+                models.Subscription.is_trial.is_(True),
+                models.Subscription.expires_at > now,
+            )
+            .all()
+        )
+
+        for subscription in subscriptions:
+            user = subscription.user
+
+            days_left = (
+                subscription.expires_at.date() - now.date()
+            ).days
+
+            try:
+                if (
+                    days_left == 1
+                    and not subscription.trial_3days_notified
+                ):
+                    await send_trial_penultimate_day_notified_message(
+                        user.telegram_id
+                    )
+                    subscription.trial_penultimate_day_notified_notified = True
+
+                if (
+                    days_left == 0
+                    and not subscription.trial_lastday_notified
+                ):
+                    await send_trial_lastday_message(user.telegram_id)
+                    subscription.trial_lastday_notified = True
+
+            except Exception:
+                logger.exception(
+                    "Failed to send trial notification to user %s",
+                    user.telegram_id,
+                )
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        logger.exception("Failed to send trial notifications")
+
+    finally:
+        db.close()
+
+
+async def send_trial_notifications_loop() -> None:
+    while True:
+        await send_trial_notifications_once()
+        await asyncio.sleep(3600)
