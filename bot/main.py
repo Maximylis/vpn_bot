@@ -611,7 +611,7 @@ async def auto_renewal_callback(callback: CallbackQuery):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="❌ Отключить автопродление / отвязать карту",
+                    text="❌ Отключить автопродление",
                     callback_data="disable_auto_renewal",
                 )
             ],
