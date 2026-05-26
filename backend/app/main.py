@@ -15,7 +15,10 @@ from app.tasks import (
     send_trial_notifications_loop,
 )
 from app.tariffs import TARIFFS
-from app.services.yookassa_service import create_yookassa_payment
+from app.services.yookassa_service import (
+    create_yookassa_payment,
+    get_yookassa_payment,
+)
 
 
 app = FastAPI(title="VPN Bot Backend")
@@ -261,10 +264,18 @@ async def yookassa_webhook(
             "reason": "invalid_tariff",
         }
 
+    yookassa_payment = get_yookassa_payment(webhook_data.object.id)
+
+    payment_method_id = None
+
+    if yookassa_payment.payment_method:
+        payment_method_id = yookassa_payment.payment_method.id
+
     result = await crud.activate_paid_subscription(
         db=db,
         payment=payment,
         months=tariff["months"],
+        payment_method_id=payment_method_id,
     )
 
     return result

@@ -50,3 +50,7 @@ def create_yookassa_payment(
             "tariff": tariff,
         },
     }, uuid.uuid4())
+
+
+def get_yookassa_payment(payment_id: str) -> Payment:
+    return Payment.find_one(payment_id)

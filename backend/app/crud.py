@@ -251,6 +251,7 @@ async def activate_paid_subscription(
     db: Session,
     payment: models.Payment,
     months: int,
+    payment_method_id: str | None = None,
 ) -> dict:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
@@ -282,6 +283,10 @@ async def activate_paid_subscription(
             trial_lastday_notified=True,
         )
         db.add(subscription)
+
+    if payment_method_id:
+        subscription.auto_renew = True
+        subscription.payment_method_id = payment_method_id
 
     vpn_key = (
         db.query(models.VpnKey)
