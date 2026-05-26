@@ -327,3 +327,24 @@ async def activate_paid_subscription(
         "ok": True,
         "reason": "activated",
     }
+
+
+def get_subscriptions_for_auto_renew(
+    db: Session,
+    days_before: int = 1,
+) -> list[models.Subscription]:
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    renew_until = now + timedelta(days=days_before)
+
+    return (
+        db.query(models.Subscription)
+        .filter(
+            models.Subscription.status == "active",
+            models.Subscription.auto_renew.is_(True),
+            models.Subscription.payment_method_id.isnot(None),
+            models.Subscription.auto_renew_tariff.isnot(None),
+            models.Subscription.expires_at <= renew_until,
+            models.Subscription.expires_at > now,
+        )
+        .all()
+    )

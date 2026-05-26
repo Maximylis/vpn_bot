@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from app import models
 from app.database import SessionLocal
@@ -9,6 +10,9 @@ from app.services.telegram_service import (
     send_trial_penultimate_day_notified_message,
     send_trial_lastday_message,
 )
+from app.services.yookassa_service import create_recurring_payment
+from app.tariffs import TARIFFS
+from app import crud
 
 
 logger = logging.getLogger(__name__)
@@ -130,3 +134,51 @@ async def send_trial_notifications_loop() -> None:
     while True:
         await send_trial_notifications_once()
         await asyncio.sleep(3600)
+
+
+async def auto_renew_subscriptions_once() -> None:
+    db = SessionLocal()
+    try:
+        subscriptions = crud.get_subscriptions_for_auto_renew(
+            db=db,
+            days_before=1,
+        )
+
+        for subscription in subscriptions:
+            tariff = TARIFFS.get(subscription.auto_renew_tariff)
+
+            if not tariff:
+                continue
+
+            user = subscription.user
+
+            yookassa_payment = create_recurring_payment(
+                amount=tariff["amount"],
+                description=tariff["title"],
+                payment_method_id=subscription.payment_method_id,
+                telegram_id=user.telegram_id,
+                tariff=subscription.auto_renew_tariff,
+            )
+
+            crud.create_payment(
+                db=db,
+                user_id=user.id,
+                tariff=subscription.auto_renew_tariff,
+                amount=Decimal(tariff["amount"]),
+                yookassa_payment_id=yookassa_payment.id,
+                confirmation_url="",
+            )
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        logger.exception("Failed to auto-renew subscriptions")
+    finally:
+        db.close()
+
+
+async def auto_renew_subscriptions_loop() -> None:
+    while True:
+        await auto_renew_subscriptions_once()
+        await asyncio.sleep(30)

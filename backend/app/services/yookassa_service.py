@@ -54,3 +54,44 @@ def create_yookassa_payment(
 
 def get_yookassa_payment(payment_id: str) -> Payment:
     return Payment.find_one(payment_id)
+
+
+def create_recurring_payment(
+    amount: str,
+    description: str,
+    payment_method_id: str,
+    telegram_id: int,
+    tariff: str,
+) -> Payment:
+    return Payment.create({
+        "amount": {
+            "value": amount,
+            "currency": "RUB",
+        },
+        "payment_method_id": payment_method_id,
+        "capture": True,
+        "description": description,
+        "receipt": {
+            "customer": {
+                "email": "support@okvpn.example",
+            },
+            "items": [
+                {
+                    "description": description,
+                    "quantity": "1.00",
+                    "amount": {
+                        "value": amount,
+                        "currency": "RUB",
+                    },
+                    "vat_code": 1,
+                    "payment_mode": "full_payment",
+                    "payment_subject": "service",
+                }
+            ],
+        },
+        "metadata": {
+            "telegram_id": str(telegram_id),
+            "tariff": tariff,
+            "recurring": "true",
+        },
+    }, uuid.uuid4())
