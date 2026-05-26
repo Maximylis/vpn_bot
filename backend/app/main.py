@@ -269,7 +269,18 @@ async def yookassa_webhook(
     payment_method_id = None
 
     if yookassa_payment.payment_method:
-        payment_method_id = yookassa_payment.payment_method.id
+        payment_method_saved = getattr(
+            yookassa_payment.payment_method,
+            "saved",
+            False,
+        )
+
+        if payment_method_saved:
+            payment_method_id = getattr(
+                yookassa_payment.payment_method,
+                "id",
+                None,
+            )
 
     result = await crud.activate_paid_subscription(
         db=db,
