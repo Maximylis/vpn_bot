@@ -188,6 +188,17 @@ class Subscription(Base):
         nullable=False,
     )
 
+    auto_renew: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    payment_method_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     user: Mapped["User"] = relationship(back_populates="subscriptions")
 
 
