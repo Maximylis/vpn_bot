@@ -287,6 +287,7 @@ async def activate_paid_subscription(
     if payment_method_id:
         subscription.auto_renew = True
         subscription.payment_method_id = payment_method_id
+        subscription.auto_renew_tariff = payment.tariff
 
     vpn_key = (
         db.query(models.VpnKey)

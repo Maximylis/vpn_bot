@@ -199,6 +199,11 @@ class Subscription(Base):
         nullable=True,
     )
 
+    auto_renew_tariff: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
     user: Mapped["User"] = relationship(back_populates="subscriptions")
 
 

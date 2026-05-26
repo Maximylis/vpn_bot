@@ -64,6 +64,7 @@ class SubscriptionRead(BaseModel):
     trial_lastday_notified: bool
     auto_renew: bool
     payment_method_id: str | None
+    auto_renew_tariff: str | None
 
 
 class UserAccessRead(BaseModel):
