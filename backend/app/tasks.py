@@ -181,4 +181,4 @@ async def auto_renew_subscriptions_once() -> None:
 async def auto_renew_subscriptions_loop() -> None:
     while True:
         await auto_renew_subscriptions_once()
-        await asyncio.sleep(30) ###!!!
+        await asyncio.sleep(30)
