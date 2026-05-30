@@ -170,7 +170,7 @@ if settings.app_env == "development":
         result = await crud.grant_test_access(
             db=db,
             telegram_id=telegram_id,
-            days=7,
+            days=3,
         )
 
         if not result["ok"]:

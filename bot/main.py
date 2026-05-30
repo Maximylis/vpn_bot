@@ -40,8 +40,8 @@ main_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="🎁 Попробовать бесплатно 7 дней",
-                callback_data="trial_7_days",
+                text="🎁 Попробовать бесплатно 3 дня",
+                callback_data="trial_3_days",
             )
         ],
         [
@@ -432,7 +432,7 @@ async def grant_trial_access(
             return
 
         await message.answer(
-            "✅ Бесплатный доступ выдан на 7 дней!\n\n"
+            "✅ Бесплатный доступ выдан на 3 дня!\n\n"
             "Инструкция по подключению посмотреть через кнопку:\n\n"
             "📲 Как подключить?\n\n"
             "Получить VPN  через кнопку:\n\n"
@@ -522,7 +522,7 @@ async def check_subscription_and_grant_trial(
 
         if not is_subscribed:
             await message.answer(
-                "📢 Чтобы получить бесплатный VPN на 7 дней,\n"
+                "📢 Чтобы получить бесплатный VPN на 3 дня,\n"
                 "сначала подпишись на наш Telegram-канал.\n\n"
                 "После подписки нажми кнопку:\n"
                 "✅ Я подписался",
@@ -586,7 +586,7 @@ async def myvpn_handler(message: Message):
     )
 
 
-@dp.message(F.text == "🎁 Попробовать бесплатно 7 дней")
+@dp.message(F.text == "🎁 Попробовать бесплатно 3 дня")
 async def trial_access_button_handler(message: Message):
     await check_subscription_and_grant_trial(
         message=message,
@@ -670,8 +670,8 @@ async def delete_message_callback(callback: CallbackQuery):
     await callback.message.delete()
 
 
-@dp.callback_query(F.data == "trial_7_days")
-async def trial_7_days_callback(callback: CallbackQuery):
+@dp.callback_query(F.data == "trial_3_days")
+async def trial_3_days_callback(callback: CallbackQuery):
     await callback.answer("Проверяю подписку...")
 
     await check_subscription_and_grant_trial(
