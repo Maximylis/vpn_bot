@@ -1,6 +1,6 @@
 import os
-import io
-import qrcode
+# import io
+# import qrcode
 from datetime import datetime
 
 import requests
