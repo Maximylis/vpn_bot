@@ -46,7 +46,7 @@ main_keyboard = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text="📲 Как подключить?",
+                text="📲 Инструкция по подключению",
                 callback_data="how_to_connect"
             )
         ],
@@ -58,7 +58,7 @@ main_keyboard = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text="🔐 Мой VPN-конфиг",
+                text="🔐 Мой VPN файл",
                 callback_data="my_vpn_config",
             )
         ],
@@ -160,28 +160,28 @@ tariffs_keyboard = InlineKeyboardMarkup(
 )
 
 
-vpn_config_keyboard = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="📷 QR-код",
-                callback_data="vpn_qr"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="📄 Файл .conf",
-                callback_data="vpn_file"
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text="⬅️ Назад",
-                callback_data="delete_message"
-            )
-        ]
-    ]
-)
+# vpn_config_keyboard = InlineKeyboardMarkup(
+#     inline_keyboard=[
+#         [
+#             InlineKeyboardButton(
+#                 text="📷 QR-код",
+#                 callback_data="vpn_qr"
+#             )
+#         ],
+#         [
+#             InlineKeyboardButton(
+#                 text="📄 Файл .conf",
+#                 callback_data="vpn_file"
+#             )
+#         ],
+#         [
+#             InlineKeyboardButton(
+#                 text="⬅️ Назад",
+#                 callback_data="delete_message"
+#             )
+#         ]
+#     ]
+# )
 
 
 subscribe_keyboard = InlineKeyboardMarkup(
@@ -196,6 +196,30 @@ subscribe_keyboard = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text="✅ Я подписался",
                 callback_data="check_subscription_trial",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="⬅️ Назад",
+                callback_data="delete_message",
+            )
+        ],
+    ]
+)
+
+
+trial_subscribe_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="🔐 Получить VPN файл",
+                callback_data="my_vpn_config",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📲 Инструкция по подключению",
+                callback_data="how_to_connect",
             )
         ],
         [
@@ -296,34 +320,34 @@ async def send_vpn_config_file(
     await message.answer_document(
         document=file,
         caption=(
-            "📄 Ваш WireGuard конфиг.\n\n"
-            "Импортируйте файл в приложение WireGuard."
+            "📄 Ваш VPN файл.\n\n"
+            "Импортируйте файл в приложение WireGuard по инструкции."
         ),
         reply_markup=reply_markup
     )
 
 
-async def send_vpn_config_qr(
-        message: Message,
-        config_text: str,
-        reply_markup=None
-):
-    img = qrcode.make(config_text)
+# async def send_vpn_config_qr(
+#         message: Message,
+#         config_text: str,
+#         reply_markup=None
+# ):
+#     img = qrcode.make(config_text)
 
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    buffer.seek(0)
+#     buffer = io.BytesIO()
+#     img.save(buffer, format="PNG")
+#     buffer.seek(0)
 
-    qr_file = BufferedInputFile(
-        buffer.read(),
-        filename="wg-vpn-qr.png",
-    )
+#     qr_file = BufferedInputFile(
+#         buffer.read(),
+#         filename="wg-vpn-qr.png",
+#     )
 
-    await message.answer_photo(
-        photo=qr_file,
-        caption="📱 Отсканируйте QR-код в приложении WireGuard.",
-        reply_markup=reply_markup
-    )
+#     await message.answer_photo(
+#         photo=qr_file,
+#         caption="📱 Отсканируйте QR-код в приложении WireGuard.",
+#         reply_markup=reply_markup
+#     )
 
 
 async def show_profile(
@@ -363,7 +387,7 @@ async def show_profile(
 async def show_myvpn(
         message: Message,
         telegram_id: int,
-        config_format: str = "qr",
+        config_format: str = "file",
         reply_markup=None
 ):
     access = backend_get(f"/users/{telegram_id}/access")
@@ -384,19 +408,19 @@ async def show_myvpn(
 
     if access["reason"] == "no_active_vpn_keys":
         await message.answer(
-            "Подписка активна, но VPN-ключ ещё не выдан.",
+            "Подписка активна, но VPN файл ещё не выдан.",
             reply_markup=reply_markup
         )
         return
 
     vpn_key = access["vpn_keys"][0]
 
-    if config_format == "qr":
-        await send_vpn_config_qr(
-            message,
-            vpn_key["config_text"],
-            reply_markup=reply_markup
-        )
+    # if config_format == "qr":
+    #     await send_vpn_config_qr(
+    #         message,
+    #         vpn_key["config_text"],
+    #         reply_markup=reply_markup
+    #     )
 
     if config_format == "file":
         await send_vpn_config_file(
@@ -418,8 +442,8 @@ async def grant_trial_access(
             if result.get("reason") == "trial_already_used":
                 await message.answer(
                     "🎁 Бесплатный тестовый период уже был использован.\n\n"
-                    "Текущий VPN-конфиг можно посмотреть через кнопку:\n"
-                    "🔐 Мой VPN-конфиг",
+                    "Текущий файл VPN можно посмотреть через кнопку:\n"
+                    "🔐 Мой VPN файл",
                     reply_markup=reply_markup
                 )
                 return
@@ -432,11 +456,10 @@ async def grant_trial_access(
             return
 
         await message.answer(
-            "✅ Бесплатный доступ выдан на 3 дня!\n\n"
-            "Инструкция по подключению посмотреть через кнопку:\n\n"
-            "📲 Как подключить?\n\n"
-            "Получить VPN  через кнопку:\n\n"
-            "🔐 Мой VPN-конфиг",
+            "✅ Тестовый VPN активирован на 3 дня!\n\n"
+            "Чтобы начать пользоваться VPN:\n\n"
+            "1️⃣ Получите файл VPN\n"
+            "2️⃣ Подключитесь в приложении WireGuard\n",
             reply_markup=reply_markup
         )
 
@@ -489,7 +512,7 @@ async def create_payment(
         await message.answer(
             "💳 Счёт на оплату создан.\n\n"
             "После оплаты подписка активируется автоматически.\n"
-            "Затем нажмите «🔐 Мой VPN-конфиг».",
+            "Получить можно нажав на кнопку «🔐 Мой VPN файл».",
             reply_markup=payment_keyboard(result["confirmation_url"])
         )
 
@@ -533,7 +556,7 @@ async def check_subscription_and_grant_trial(
         await grant_trial_access(
             message=message,
             telegram_id=telegram_id,
-            reply_markup=back_delete_keyboard,
+            reply_markup=trial_subscribe_keyboard,
         )
 
     except Exception:
@@ -645,7 +668,7 @@ async def disable_auto_renewal_callback(callback: CallbackQuery):
     )
 
 
-@dp.message(F.text == "🔐 Мой VPN-конфиг")
+@dp.message(F.text == "🔐 Мой VPN файл")
 async def myvpn_button_handler(message: Message):
     await show_myvpn(
         message=message,
@@ -704,34 +727,40 @@ async def profile_callback(callback: CallbackQuery):
 @dp.callback_query(F.data == "my_vpn_config")
 async def my_vpn_config_callback(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer(
-        "🔐 Выберите формат VPN-конфига:",
-        reply_markup=vpn_config_keyboard
-    )
-
-
-@dp.callback_query(F.data == "vpn_qr")
-async def vpn_qr_callback(callback: CallbackQuery):
-    await callback.answer()
-
-    await show_myvpn(
-        message=callback.message,
-        telegram_id=callback.from_user.id,
-        config_format="qr",
-        reply_markup=back_delete_keyboard
-    )
-
-
-@dp.callback_query(F.data == "vpn_file")
-async def vpn_file_callback(callback: CallbackQuery):
-    await callback.answer()
-
+    # await callback.message.answer(
+    #     "🔐 Выберите формат VPN-конфига:",
+    #     reply_markup=vpn_config_keyboard
+    # )
     await show_myvpn(
         message=callback.message,
         telegram_id=callback.from_user.id,
         config_format="file",
         reply_markup=back_delete_keyboard
     )
+
+
+# @dp.callback_query(F.data == "vpn_qr")
+# async def vpn_qr_callback(callback: CallbackQuery):
+#     await callback.answer()
+
+#     await show_myvpn(
+#         message=callback.message,
+#         telegram_id=callback.from_user.id,
+#         config_format="qr",
+#         reply_markup=back_delete_keyboard
+#     )
+
+
+# @dp.callback_query(F.data == "vpn_file")
+# async def vpn_file_callback(callback: CallbackQuery):
+#     await callback.answer()
+
+#     await show_myvpn(
+#         message=callback.message,
+#         telegram_id=callback.from_user.id,
+#         config_format="file",
+#         reply_markup=back_delete_keyboard
+#     )
 
 
 @dp.callback_query(F.data == "tariffs")
@@ -769,8 +798,8 @@ async def instruction_phone_callback(callback: CallbackQuery):
             '<a href="https://play.google.com/store/apps/details?'
             'id=com.wireguard.android">'
             "Скачать на Android</a>\n\n"
-            "2. После покупки вы получите конфигурацию WireGuard.\n"
-            "3. Добавьте конфигурацию через QR-код или файл."
+            "2. Получите VPN файл по кнопке 🔐 Мой VPN файл.\n"
+            "3. Импортируйте файл в приложение, как показано на фото."
         ),
         parse_mode="HTML",
         reply_markup=back_delete_keyboard
@@ -791,8 +820,8 @@ async def instruction_computer_callback(callback: CallbackQuery):
             "1. Установите приложение WireGuard:\n"
             '<a href="https://www.wireguard.com/install/">'
             "Скачать WireGuard для компьютера</a>\n\n"
-            "2. После покупки вы получите конфигурационный файл WireGuard.\n"
-            "3. Импортируйте файл в приложение."
+            "2. Получите VPN файл по кнопке 🔐 Мой VPN файл.\n"
+            "3. Импортируйте файл в приложение, как показано на фото."
         ),
         parse_mode="HTML",
         reply_markup=back_delete_keyboard
