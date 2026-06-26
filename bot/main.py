@@ -792,14 +792,17 @@ async def instruction_phone_callback(callback: CallbackQuery):
         photo=photo,
         caption=(
             "📱 Инструкция для подключения VPN на телефоне.\n\n"
-            "1. Установите приложение WireGuard:\n"
+            "1️⃣ Установите на телефон приложение WireGuard:\n\n"
+            "   🍏Iphone: "
             '<a href="https://apps.apple.com/app/wireguard/id1441195209">'
-            "Скачать приложение на iOS</a>\n"
+            "ссылка на приложение</a>\n"
+            "   🤖Android: "
             '<a href="https://play.google.com/store/apps/details?'
             'id=com.wireguard.android">'
-            "Скачать на Android</a>\n\n"
-            "2. Получите VPN файл по кнопке 🔐 Мой VPN файл.\n"
-            "3. Импортируйте файл в приложение, как показано на фото."
+            "ссылка на приложение</a>\n\n"
+            "2️⃣ Следуйте инструкции на фотографии.\n"
+            "3️⃣ Если у вас возникли трудности при подключении, "
+            "напишите нам @AXMbotsupport, мы обязательно вам поможем."
         ),
         parse_mode="HTML",
         reply_markup=back_delete_keyboard
@@ -817,11 +820,16 @@ async def instruction_computer_callback(callback: CallbackQuery):
         photo=photo,
         caption=(
             "💻 Инструкция для подключения VPN на компьютере.\n\n"
-            "1. Установите приложение WireGuard:\n"
+            "1️⃣ Установите приложение WireGuard:\n\n"
+            "   🍏MAC OS: "
             '<a href="https://www.wireguard.com/install/">'
-            "Скачать WireGuard для компьютера</a>\n\n"
-            "2. Получите VPN файл по кнопке 🔐 Мой VPN файл.\n"
-            "3. Импортируйте файл в приложение, как показано на фото."
+            "ссылка на приложение</a>\n"
+            "   🌌Windows:"
+            '<a href="https://www.wireguard.com/install/">'
+            "ссылка на приложение</a>\n\n"
+            "2️⃣ Следуйте инструкции на фотографии.\n"
+            "3️⃣ Если у вас возникли трудности при подключении, "
+            "напишите нам @AXMbotsupport, мы обязательно вам поможем."
         ),
         parse_mode="HTML",
         reply_markup=back_delete_keyboard
