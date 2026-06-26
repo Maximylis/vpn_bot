@@ -100,12 +100,12 @@ async def send_trial_notifications_once() -> None:
             try:
                 if (
                     days_left == 1
-                    and not subscription.trial_3days_notified
+                    and not subscription.trial_penultimate_day_notified
                 ):
                     await send_trial_penultimate_day_notified_message(
                         user.telegram_id
                     )
-                    subscription.trial_penultimate_day_notified_notified = True
+                    subscription.trial_penultimate_day_notified = True
 
                 if (
                     days_left == 0
